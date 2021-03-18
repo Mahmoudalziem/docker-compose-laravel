@@ -14,8 +14,15 @@ services:
     working_dir: /var/www/html
     links: 
       - php
+    networks:
+      - db
   php:
-    image: php:7.4-fpm
+    build: 
+      context: php
+      dockerfile: Dockerfile
+    environment:
+      SERVICE_NAME: demo_app
+      SERVICE_TAGS: dev
     container_name: php-fpm
     env_file:
       - ".env"
@@ -23,16 +30,21 @@ services:
       - "${WEB_APP}:/var/www/html"
     ports: 
       - 9000:9000
+    networks: 
+      - db
   mysql:
     image: mysql:${MYSQL_VERSION}
     container_name: db-mysql
-    restart: always
+    restart: unless-stopped
     env_file:
       - ".env"
     environment: 
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
     ports: 
-      - 3306:3306
+      - 8889:3306
     networks:
       - db
   phpmyadmin:
@@ -49,3 +61,4 @@ services:
       - db
 networks: 
   db:
+    driver: bridge
